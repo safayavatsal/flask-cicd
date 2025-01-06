@@ -1,0 +1,66 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - jenkins   # Trigger this workflow only for the 'jenkins' branch
+  pull_request:
+    branches:
+      - jenkins   # Trigger for PRs to 'jenkins' branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu image for the job
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      # Step 4: Run tests
+      - name: Run pytest
+        run: |
+          pytest --junitxml=report.xml
+
+      # Step 5: Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t flask-app .
+
+      # Step 6: Login to Docker registry (DockerHub)
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}  # DockerHub username stored in secrets
+          password: ${{ secrets.DOCKER_PASSWORD }}  # DockerHub password stored in secrets
+
+      # Step 7: Push Docker image to DockerHub
+      - name: Push Docker image to DockerHub
+        run: |
+          docker tag flask-app ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+
+      # Step 8: Deploy to Production (if needed)
+      # For example, if you're using AWS ECS, Azure, or another service, you can add deployment steps here
+      # For simplicity, we will skip the deployment step here.
+      
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Clean up unused Docker images
+      - name: Cleanup Docker images
+        run: |
+          docker system prune -f

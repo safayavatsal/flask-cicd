@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         DOCKER_IMAGE_NAME = "flask-app"               // Docker image name
-        DOCKER_REGISTRY = "your-docker-registry"       // Replace with your Docker registry, e.g., 'docker.io', 'AWS_ECR'
-        DOCKER_CREDENTIALS = "docker-credentials-id"   // Jenkins credentials ID for Docker Registry (DockerHub, AWS, etc.)
+        DOCKER_REGISTRY = "your-docker-registry"      // Replace with your Docker registry, e.g., 'docker.io'
+        DOCKER_CREDENTIALS = "docker-credentials-id"  // Jenkins credentials ID for Docker Registry
     }
 
     stages {
@@ -12,6 +12,19 @@ pipeline {
             steps {
                 // Pull the repository containing your app
                 git 'https://your-repository-url.git'  // Replace with your Git repository URL
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    // Run pytest to execute unit tests
+                    echo "Running Pytest"
+                    sh '''
+                    pip install -r requirements.txt
+                    pytest --junitxml=report.xml
+                    '''
+                }
             }
         }
 
@@ -28,7 +41,7 @@ pipeline {
             steps {
                 script {
                     // Login to Docker Registry (DockerHub, AWS ECR, etc.)
-                    docker.withRegistry('https://${DOCKER_REGISTRY}', "${DOCKER_CREDENTIALS}") {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", "${DOCKER_CREDENTIALS}") {
                         echo "Logged in to Docker Registry"
                     }
                 }
@@ -39,7 +52,7 @@ pipeline {
             steps {
                 script {
                     // Push the Docker image to the registry
-                    docker.withRegistry('https://${DOCKER_REGISTRY}', "${DOCKER_CREDENTIALS}") {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", "${DOCKER_CREDENTIALS}") {
                         docker.image("${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest").push()
                     }
                 }

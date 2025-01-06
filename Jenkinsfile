@@ -15,13 +15,25 @@ pipeline {
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Install the required dependencies, including pytest
+                    echo "Installing Dependencies"
+                    sh '''
+                    pip install -r requirements.txt
+                    pip install pytest
+                    '''
+                }
+            }
+        }
+
         stage('Run Tests') {
             steps {
                 script {
                     // Run pytest to execute unit tests
                     echo "Running Pytest"
                     sh '''
-                    pip install -r requirements.txt
                     pytest --junitxml=report.xml
                     '''
                 }

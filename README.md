@@ -88,6 +88,7 @@ Access the Flask app at: [http://localhost:5000](http://localhost:5000)
 ├── requirements.txt
 ├── test.py
 ├── .github/workflows/ci.yml
+├──.github/actions/actions.yml
 ```
 
 - `Dockerfile` - Defines how to containerize the Flask app.
